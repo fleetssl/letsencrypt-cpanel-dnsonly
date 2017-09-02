@@ -36,7 +36,7 @@
         <p class="lead">With neither <a href="https://letsencrypt-for-cpanel.com" target="_blank">FleetSSL cPanel</a> or cPanel&reg; AutoSSL
         supporting DNSONLY servers, we've decided to make a free and convenient
       packaging of the awesome <a href="https://github.com/hlandau/acme" target="_blank">acmetool</a> project and some
-        custom configuration + hooks for easy free SSL on your 
+        custom configuration + hooks for free, automatically renewing SSL on your 
         DNSONLY nameservers.
       </div>
 
@@ -65,6 +65,12 @@
           <p class="">You typically should not need to do anything after installing the package.  </p>
 	  <p>
 	    <strong>I need to re-install the service certificate that was already issued</strong>. You may use the following command: <pre>/usr/local/letsencrypt-cpanel-dnsonly/acmetool test-notify $(hostname)</pre>
+	  </p>
+	  <p>
+	    <strong>I want to run renewal by hand</strong>. You may use the following command, but acmetool may decline to do anything if the existing certificate is valid and long duration. An automatically-added cron job usually runs this task. <pre>/usr/local/letsencrypt-cpanel-dnsonly/acmetool reconcile</pre>
+	  </p>
+	  <p>
+	    <strong>I changed my server hostname</strong>. A re-install will get you going: <pre>yum -y reinstall letsencrypt-cpanel-dnsonly</pre>
 	  </p>
 	</div>
 
