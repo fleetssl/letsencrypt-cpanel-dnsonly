@@ -4,8 +4,14 @@ set -euf -o pipefail
 
 DNSONLY_PREFIX=/usr/local/letsencrypt-cpanel-dnsonly
 
-mkdir -p /usr/lib/acme/hooks/
-cp ${DNSONLY_PREFIX}/certificate-hook.sh /usr/lib/acme/hooks/
+# Hook goes in libexec if it exists, otherwise lib
+HOOK_PREFIX=/usr/lib/acme/hooks
+if [ -d "/usr/libexec" ]; then
+  HOOK_PREFIX=/usr/libexec/acme/hooks
+fi
+mkdir -p ${HOOK_PREFIX}
+
+cp ${DNSONLY_PREFIX}/certificate-hook.sh ${HOOK_PREFIX}/
 
 echo "!!! Please wait, configuring acmetool !!!"
 

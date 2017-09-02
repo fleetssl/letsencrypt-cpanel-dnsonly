@@ -32,4 +32,4 @@ CRT=$(rawurlencode "$(cat ${ACME_PREFIX}/cert)")
 KEY=$(rawurlencode "$(cat ${ACME_PREFIX}/privkey)")
 CHAIN=$(rawurlencode "$(cat ${ACME_PREFIX}/chain)")
 
-/usr/sbin/whmapi1 install_service_ssl_certificate service=cpanel crt="${CRT}" key="${KEY}" cabundle="${CHAIN}" && \ /sbin/service cpanel restart
+/usr/sbin/whmapi1 install_service_ssl_certificate service=cpanel crt="${CRT}" key="${KEY}" cabundle="${CHAIN}" && /sbin/service cpanel restart
