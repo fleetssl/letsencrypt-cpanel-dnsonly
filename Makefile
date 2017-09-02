@@ -1,7 +1,7 @@
 ACMETOOL_VER?=0.0.61
 VER?=0.0.1
 
-.PHONY: clean package all
+.PHONY: clean package all publish
 
 all: package
 
@@ -20,6 +20,10 @@ acmetool:
 	tar -C scratch/ --strip-components=1 -zxf scratch/acmetool.tar.gz
 	mv scratch/bin/acmetool .
 	rm -rf scratch
+
+publish:
+	rsync -vhz --progress *.rpm root@fleetssl.com:/home/web/repo
+	ssh root@fleetssl.com "createrepo --update /home/web/repo"
 
 clean:
 	rm -rf *.rpm
