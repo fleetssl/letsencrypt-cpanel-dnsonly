@@ -67,8 +67,9 @@
 	    <strong>I need to re-install the service certificate that was already issued</strong>. You may use the following command: <pre>/usr/local/letsencrypt-cpanel-dnsonly/acmetool test-notify $(hostname)</pre>
 	  </p>
 	  <p>
-	    <strong>I want to run renewal by hand</strong>. You may use the following command, but acmetool may decline to do anything if the existing certificate is valid and long duration. An automatically-added cron job usually runs this task. <pre>/usr/local/letsencrypt-cpanel-dnsonly/acmetool reconcile</pre>
+	    <strong>I want to run renewal by hand or troubleshoot the renewal process</strong>. You may use the following command, but acmetool may decline to do anything if the existing certificate is valid and long duration. An automatically-added cron job usually runs this task. <pre>/usr/local/letsencrypt-cpanel-dnsonly/acmetool --xlog.severity=debug reconcile</pre>
 	  </p>
+    <p>You may find the full documentation to acmetool <a href="https://hlandau.github.io/acme/" rel="noreferrer noopener" target="_blank">on the project website.</a>.</p>
 	  <p>
 	    <strong>I changed my server hostname</strong>. A re-install will get you going: <pre>yum -y reinstall letsencrypt-cpanel-dnsonly</pre>
 	  </p>
