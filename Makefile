@@ -1,5 +1,5 @@
 ACMETOOL_VER?=0.0.61
-VER?=0.0.1
+VER?=0.0.2
 
 .PHONY: clean package all publish
 
