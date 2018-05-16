@@ -33,3 +33,5 @@ KEY=$(rawurlencode "$(cat ${ACME_PREFIX}/privkey)")
 CHAIN=$(rawurlencode "$(cat ${ACME_PREFIX}/chain)")
 
 /usr/sbin/whmapi1 install_service_ssl_certificate service=cpanel crt="${CRT}" key="${KEY}" cabundle="${CHAIN}" && /sbin/service cpanel restart
+(/usr/sbin/whmapi1 install_service_ssl_certificate service=dovecot crt="${CRT}" key="${KEY}" cabundle="${CHAIN}" && /sbin/service dovecot restart) || true
+(/usr/sbin/whmapi1 install_service_ssl_certificate service=exim crt="${CRT}" key="${KEY}" cabundle="${CHAIN}" && /sbin/service exim restart) || true
