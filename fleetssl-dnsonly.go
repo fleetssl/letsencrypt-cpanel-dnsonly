@@ -158,7 +158,7 @@ func issue() error {
 
 	acmeCl, err := acme.NewClient(dir,
 		acme.WithUserAgentSuffix("fleetssl-dnsonly/"+version+
-			" (https://github.com/letsencrypt-cpanel/letsencrypt-cpanel-dnsonly"),
+			" (https://github.com/letsencrypt-cpanel/letsencrypt-cpanel-dnsonly)"),
 		acme.WithHTTPClient(makeHTTPClientNoIPv6()))
 	if err != nil {
 		return fmt.Errorf("failed to create ACME client: %v", err)
