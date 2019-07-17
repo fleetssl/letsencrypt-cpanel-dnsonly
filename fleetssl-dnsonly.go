@@ -202,7 +202,7 @@ func issue() error {
 			for _, u := range order.Authorizations {
 				authz, err := acmeCl.FetchAuthorization(acct, u)
 				if err != nil || (authz.Status != "valid" && authz.Status != "pending") {
-					return
+					continue
 				}
 				log.Printf("[DRY-RUN] Deactivating authorization %s", u)
 				if _, err := acmeCl.DeactivateAuthorization(acct, u); err != nil {
