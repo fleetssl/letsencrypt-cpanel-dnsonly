@@ -249,6 +249,7 @@ func issue() error {
 			keyAuthz, ok := toks[tok]
 			if !ok {
 				http.Error(w, "Unknown challenge", http.StatusUnauthorized)
+				return
 			}
 			log.Printf("[WEB] Responding to %v/%s for %s",
 				r.RemoteAddr, r.Header.Get("user-agent"), r.URL.Path)
