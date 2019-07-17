@@ -5,4 +5,6 @@ if [ -f "/etc/cron.d/acmetool" ]; then
   rm -f /etc/cron.d/acmetool
 fi
 
+chmod 0644 /etc/cron.d/fleetssl-dnsonly
+
 /usr/local/bin/fleetssl-dnsonly
