@@ -141,7 +141,7 @@ func install() error {
 		log.Printf("Restarting service %s", target[1])
 		ctx2, cancel2 := context.WithTimeout(context.Background(), 60*time.Second)
 		defer cancel2()
-		cmd = exec.CommandContext(ctx2, "/usr/sbin/whmapi1", "service="+target[1])
+		cmd = exec.CommandContext(ctx2, "/usr/sbin/whmapi1", "restartservice", "service="+target[1])
 		out, err = cmd.CombinedOutput()
 		if err != nil {
 			log.Printf("Failed to restart service for %s: %v: %s", target[1], err, string(out))
