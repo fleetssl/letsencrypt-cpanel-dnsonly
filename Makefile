@@ -1,4 +1,4 @@
-VER?=1.0.0
+VER?=1.0.1
 
 .PHONY: clean package all publish
 
@@ -14,7 +14,7 @@ package: clean fleetssl-dnsonly
 	@rm -rf fpm
 
 fleetssl-dnsonly:
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o fleetssl-dnsonly fleetssl-dnsonly.go
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w -X main.version=$(VER)" -o fleetssl-dnsonly fleetssl-dnsonly.go
 
 publish:
 	rsync -vhz --progress *.rpm root@fleetssl.com:/home/web/repo

@@ -76,6 +76,8 @@ type configFile struct {
 }
 
 func main() {
+	log.Println("fleetssl-dnsonly/" + version)
+
 	flag.StringVar(&statePath, "state", envOrDefault("STATE_PATH", defaultStatePath), "Storage path for program state")
 	flag.StringVar(&confPath, "conf", envOrDefault("CONF_PATH", defaultConfPath), "Storage path for program configuration")
 	flag.BoolVar(&isDryRun, "dry-run", false, "Whether to limit renewal to a dry-run only")
