@@ -1,24 +1,8 @@
 #!/usr/bin/env bash
 
-set -euf -o pipefail
-
-DNSONLY_PREFIX=/usr/local/letsencrypt-cpanel-dnsonly
-
-# Hook goes in libexec if it exists, otherwise lib
-HOOK_PREFIX=/usr/lib/acme/hooks
-if [ -d "/usr/libexec" ]; then
-  HOOK_PREFIX=/usr/libexec/acme/hooks
+if [ -f "/etc/cron.d/acmetool" ]; then
+  echo "Removing acmetool cron job from previous version"
+  rm -f /etc/cron.d/acmetool
 fi
-mkdir -p ${HOOK_PREFIX}
 
-cp ${DNSONLY_PREFIX}/certificate-hook.sh ${HOOK_PREFIX}/
-
-echo "!!! Please wait, configuring acmetool !!!"
-
-${DNSONLY_PREFIX}/acmetool quickstart --response-file=${DNSONLY_PREFIX}/responses.yml 
-
-echo "!!! Please wait, trying to issue certificate now !!!"
-
-${DNSONLY_PREFIX}/acmetool want $(hostname)
-
-echo "Done."
+/usr/local/bin/fleetssl-dnsonly

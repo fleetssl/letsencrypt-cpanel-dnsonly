@@ -1,2 +1,5 @@
 acmetool
 *.rpm
+/fleetssl-dnsonly.state
+/fleetssl-dnsonly.conf
+/fleetssl-dnsonly
