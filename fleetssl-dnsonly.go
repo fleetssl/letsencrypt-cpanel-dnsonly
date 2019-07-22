@@ -627,6 +627,8 @@ func saveState() error {
 		return fmt.Errorf("could not write state file: %v", err)
 	}
 
+	state.needsPersist = false
+
 	return nil
 }
 
