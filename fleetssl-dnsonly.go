@@ -17,12 +17,14 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net"
 	"net/http"
 	"net/url"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -33,6 +35,7 @@ import (
 const (
 	defaultStatePath = "/var/lib/fleetssl-dnsonly.json"
 	defaultConfPath  = "/etc/fleetssl-dnsonly.conf"
+	webrootPath      = "/usr/local/apache/htdocs/.well-known/acme-challenge"
 )
 
 var (
@@ -234,33 +237,51 @@ func issue() error {
 	log.Printf("Starting webserver on :%d", config.ListenPort)
 	listener, err := net.Listen("tcp", ":"+strconv.Itoa(config.ListenPort))
 	if err != nil {
-		return fmt.Errorf("Failed to listen on port %d: %v", config.ListenPort, err)
+		log.Printf("Failed to listen on port %d, will fall back to webroot solver: %v", config.ListenPort, err)
+	} else {
+		defer listener.Close()
+		const pathPrefix = "/.well-known/acme-challenge/"
+		go func() {
+			if err := http.Serve(listener, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				p := r.URL.Path
+				if !strings.HasPrefix(p, pathPrefix) {
+					http.Error(w, "Not found", http.StatusNotFound)
+					return
+				}
+				tok := strings.TrimPrefix(p, pathPrefix)
+				keyAuthz, ok := toks[tok]
+				if !ok {
+					http.Error(w, "Unknown challenge", http.StatusUnauthorized)
+					return
+				}
+				log.Printf("[WEB] Responding to %v/%s for %s",
+					r.RemoteAddr, r.Header.Get("user-agent"), r.URL.Path)
+				fmt.Fprint(w, keyAuthz)
+			})); err != nil {
+				if opErr, ok := err.(*net.OpError); ok && opErr.Op == "accept" {
+					return
+				}
+				log.Printf("HTTP server stopped: %v, %T", err, err)
+			}
+		}()
 	}
-	defer listener.Close()
-	const pathPrefix = "/.well-known/acme-challenge/"
-	go func() {
-		if err := http.Serve(listener, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			p := r.URL.Path
-			if !strings.HasPrefix(p, pathPrefix) {
-				http.Error(w, "Not found", http.StatusNotFound)
-				return
-			}
-			tok := strings.TrimPrefix(p, pathPrefix)
-			keyAuthz, ok := toks[tok]
-			if !ok {
-				http.Error(w, "Unknown challenge", http.StatusUnauthorized)
-				return
-			}
-			log.Printf("[WEB] Responding to %v/%s for %s",
-				r.RemoteAddr, r.Header.Get("user-agent"), r.URL.Path)
-			fmt.Fprint(w, keyAuthz)
-		})); err != nil {
-			if opErr, ok := err.(*net.OpError); ok && opErr.Op == "accept" {
-				return
-			}
-			log.Printf("HTTP server stopped: %v, %T", err, err)
+
+	// Perform the webroot solver in any case
+	if err := os.MkdirAll("/usr/local/apache/htdocs/.well-known/acme-challenge", 0755); err != nil {
+		log.Printf("[WEBROOT] Failed to create webroot dir: %v, will continue anyway", err)
+	}
+	for token, keyAuthz := range toks {
+		tokenPath := filepath.Join(webrootPath, token)
+		if err := ioutil.WriteFile(tokenPath, []byte(keyAuthz), 0644); err != nil {
+			log.Printf("[WEBROOT] Failed to write %s: %v", tokenPath, err)
+		} else {
+			log.Printf("[WEBROOT] Wrote %s", tokenPath)
+			defer func(p string) {
+				log.Printf("[WEBROOT] Removing %s", p)
+				os.Remove(p)
+			}(tokenPath)
 		}
-	}()
+	}
 
 	// Respond to each challenge
 	log.Println("Responding to challenges ...")
