@@ -573,7 +573,7 @@ func loadConfig() error {
 
 	// And then apply the env vars
 	config.ACMEDirectory = envOrDefault("ACME_DIRECTORY", "https://acme-v02.api.letsencrypt.org/directory")
-	config.ACMEDryRunDirectory = envOrDefault("ACME_DIRECTORY", "https://acme-staging-v02.api.letsencrypt.org/directory")
+	config.ACMEDryRunDirectory = envOrDefault("ACME_DRYRUN_DIRECTORY", "https://acme-staging-v02.api.letsencrypt.org/directory")
 	config.ACMEKeySpec = envOrDefault("ACME_KEY_TYPE", "ecdsa:256")
 	config.ACMEEmailAddress = envOrDefault("ACME_EMAIL_ADDRESS", "")
 	config.CSRKeySpec = envOrDefault("CERT_KEY_TYPE", "rsa:2048")
