@@ -267,9 +267,15 @@ func issue() error {
 	}
 
 	// Perform the webroot solver in any case
-	if err := os.MkdirAll("/usr/local/apache/htdocs/.well-known/acme-challenge", 0755); err != nil {
+
+	// https://github.com/letsencrypt-cpanel/letsencrypt-cpanel-dnsonly/issues/16
+	// Since apparently sometimes /usr/local/apache will be perm 0700 and unreadable
+	// by the nobody user, we need to work around it by setting the perm ourselves
+	// for each directory in webrootPath.
+	if err := mkdirAllEnsureWorldReadable(webrootPath); err != nil {
 		log.Printf("[WEBROOT] Failed to create webroot dir: %v, will continue anyway", err)
 	}
+
 	for token, keyAuthz := range toks {
 		tokenPath := filepath.Join(webrootPath, token)
 		if err := ioutil.WriteFile(tokenPath, []byte(keyAuthz), 0644); err != nil {
@@ -672,4 +678,38 @@ func makeHTTPClientNoIPv6() *http.Client {
 		},
 		Timeout: 60 * time.Second,
 	}
+}
+
+func mkdirAllEnsureWorldReadable(path string) error {
+	const (
+		groupRX = 00040 | 00010
+		otherRX = 00004 | 00001
+	)
+	perm := os.FileMode(0755)
+
+	path = strings.TrimSuffix(path, "/")
+	if path[0] != '/' || len(path) <= 1 {
+		return errors.New("invalid path")
+	}
+
+	split := strings.Split(path[1:], "/")
+	for i := 0; i < len(split); i++ {
+		p := "/" + strings.Join(split[:i+1], "/")
+		st, err := os.Stat(p)
+		if os.IsNotExist(err) {
+			if err := os.Mkdir(p, perm); err != nil {
+				return err
+			}
+		} else if err != nil {
+			return err
+		}
+		m := st.Mode()
+		if m.Perm()&groupRX != groupRX || m.Perm()&otherRX != otherRX {
+			if err := os.Chmod(p, os.FileMode(m&^0777|perm)); err != nil {
+				return &os.PathError{Op: "chmod", Path: p, Err: err}
+			}
+		}
+	}
+
+	return nil
 }
