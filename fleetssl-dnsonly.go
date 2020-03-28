@@ -467,8 +467,8 @@ func newPrivateKey(keySpec string) (crypto.Signer, error) {
 
 	switch strings.ToLower(spec[0]) {
 	case "rsa":
-		keySize, err := strconv.Atoi(spec[1])
-		if err != nil {
+		keySize, ksErr := strconv.Atoi(spec[1])
+		if ksErr != nil {
 			return nil, fmt.Errorf("could not parse keyspec key size %s: %v", spec[1], err)
 		}
 		signer, err = rsa.GenerateKey(rand.Reader, keySize)
