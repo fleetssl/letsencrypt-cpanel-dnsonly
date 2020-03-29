@@ -700,6 +700,7 @@ func mkdirAllEnsureWorldReadable(path string) error {
 			if err := os.Mkdir(p, perm); err != nil {
 				return err
 			}
+			continue
 		} else if err != nil {
 			return err
 		}
