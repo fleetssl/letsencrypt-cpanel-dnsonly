@@ -30,6 +30,7 @@ import (
 	"time"
 
 	"github.com/eggsampler/acme/v3"
+	"golang.org/x/crypto/ocsp"
 )
 
 const (
@@ -47,7 +48,8 @@ var (
 	state     = &stateFile{}
 	config    = &configFile{}
 
-	version = "dev"
+	version   = "dev"
+	userAgent = "fleetssl-dnsonly/" + version + " (https://github.com/letsencrypt-cpanel/letsencrypt-cpanel-dnsonly)"
 
 	installTargets = [][]string{{"cpanel", "cpsrvd"}, {"dovecot", "imap"}, {"exim", "exim"}}
 )
@@ -58,7 +60,7 @@ type stateFile struct {
 
 	// PEM-Encoded certificate chain
 	CertificateChain []byte
-	// PEM-encoded certificate private key
+	// DER-encoded certificate private key
 	CertificatePrivateKey []byte
 
 	needsPersist bool
@@ -159,10 +161,7 @@ func issue() error {
 		dir = config.ACMEDryRunDirectory
 	}
 
-	acmeCl, err := acme.NewClient(dir,
-		acme.WithUserAgentSuffix("fleetssl-dnsonly/"+version+
-			" (https://github.com/letsencrypt-cpanel/letsencrypt-cpanel-dnsonly)"),
-		acme.WithHTTPClient(makeHTTPClientNoIPv6()))
+	acmeCl, err := acme.NewClient(dir, acme.WithUserAgentSuffix(userAgent))
 	if err != nil {
 		return fmt.Errorf("failed to create ACME client: %v", err)
 	}
@@ -389,6 +388,12 @@ func checkNeedsToIssue() (bool, string) {
 	}
 	if isReinstall {
 		return true, "certificate reinstall was requested"
+	}
+
+	if isRevoked, err := isCertificateRevokedOCSP(chain); isRevoked {
+		return true, "certificate is revoked"
+	} else if err != nil {
+		log.Printf("Revocation check failed: %v. Assuming not revoked", err)
 	}
 
 	return false, "certificate is valid and not expiring soon"
@@ -666,20 +671,6 @@ func envOrDefault(name, defaultValue string) string {
 	return defaultValue
 }
 
-func makeHTTPClientNoIPv6() *http.Client {
-	dc := &net.Dialer{
-		DualStack: false,
-	}
-	return &http.Client{
-		Transport: &http.Transport{
-			DialContext: func(ctx context.Context, net, addr string) (net.Conn, error) {
-				return dc.DialContext(ctx, "tcp4", addr)
-			},
-		},
-		Timeout: 60 * time.Second,
-	}
-}
-
 func mkdirAllEnsureWorldReadable(path string) error {
 	const (
 		groupRX = 00040 | 00010
@@ -713,4 +704,61 @@ func mkdirAllEnsureWorldReadable(path string) error {
 	}
 
 	return nil
+}
+
+func isCertificateRevokedOCSP(chain []*x509.Certificate) (bool, error) {
+	if len(chain) < 2 {
+		return false, errors.New("cannot check revocation because issuer is missing from chain")
+	}
+
+	leaf := chain[0]
+	issuer := chain[1]
+
+	if !bytes.Equal(leaf.AuthorityKeyId, issuer.SubjectKeyId) {
+		return false, fmt.Errorf("leaf AKI (%x) != issuer SKI (%x)", leaf.AuthorityKeyId, issuer.SubjectKeyId)
+	}
+
+	if len(leaf.OCSPServer) < 1 {
+		return false, fmt.Errorf("unexpected number of OCSP URLs: %v", leaf.OCSPServer)
+	}
+
+	ocspURL, err := url.Parse(leaf.OCSPServer[0])
+	if err != nil {
+		return false, err
+	}
+
+	ocspReqBuf, err := ocsp.CreateRequest(leaf, issuer, nil)
+	if err != nil {
+		return false, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, ocspURL.String(), bytes.NewReader(ocspReqBuf))
+	if err != nil {
+		return false, err
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	req = req.WithContext(ctx)
+
+	req.Header.Set("content-type", "application/ocsp-request")
+	req.Header.Set("accept", "application/ocsp-response")
+	req.Header.Set("user-agent", userAgent)
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return false, err
+	}
+	defer resp.Body.Close()
+
+	respBuf, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return false, err
+	}
+
+	ocspResp, err := ocsp.ParseResponse(respBuf, issuer)
+	if err != nil {
+		return false, err
+	}
+
+	return ocspResp.Status == ocsp.Revoked, nil
 }
