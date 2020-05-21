@@ -298,9 +298,9 @@ func issue() error {
 
 	// Generate a CSR
 	log.Println("Generating CSR ...")
-	signer, err := getOrCreateCertificateKey()
+	signer, err := createCertificateKey()
 	if err != nil {
-		return fmt.Errorf("could not acquire certificate private key: %v", err)
+		return fmt.Errorf("could not create certificate private key: %v", err)
 	}
 	signerDER, err := x509.MarshalPKCS8PrivateKey(signer)
 	if err != nil {
@@ -439,27 +439,10 @@ func verifyChain(chain []*x509.Certificate, dnsNames []string) error {
 	return nil
 }
 
-func getOrCreateCertificateKey() (crypto.Signer, error) {
-	var signer crypto.Signer
-	var err error
-
-	if len(state.CertificatePrivateKey) > 0 {
-		pk, err := x509.ParsePKCS8PrivateKey(state.CertificatePrivateKey)
-		if err != nil {
-			log.Printf("Couldn't read existing certificate private key, will generate a new one")
-		} else {
-			asSigner, ok := pk.(crypto.Signer)
-			if !ok {
-				log.Printf("Existing CSR key is not suitable, will generate a new one: %T", pk)
-			}
-			signer = asSigner
-		}
-	}
-	if signer == nil {
-		signer, err = newPrivateKey(config.CSRKeySpec)
-		if err != nil {
-			return nil, fmt.Errorf("failed to read or generate new CSR private key: %v", err)
-		}
+func createCertificateKey() (crypto.Signer, error) {
+	signer, err := newPrivateKey(config.CSRKeySpec)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read or generate new CSR private key: %v", err)
 	}
 	return signer, nil
 }
