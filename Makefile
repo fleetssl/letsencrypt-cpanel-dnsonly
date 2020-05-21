@@ -1,4 +1,4 @@
-VER?=1.0.4
+VER?=1.1.0
 
 .PHONY: clean package all publish
 
