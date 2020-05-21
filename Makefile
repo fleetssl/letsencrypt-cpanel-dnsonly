@@ -17,7 +17,7 @@ fleetssl-dnsonly:
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w -X main.version=$(VER)" -o fleetssl-dnsonly fleetssl-dnsonly.go
 
 publish:
-	rsync -vhz --progress *.rpm root@fleetssl.com:/home/web/repo
+	rsync -vhz --progress *.rpm web@fleetssl.com:/home/web/repo
 	ssh web@fleetssl.com "createrepo --update /home/web/repo"
 	ssh root@fleetssl.com "sh -c '/root/invalidate-cdn.sh'"
 
