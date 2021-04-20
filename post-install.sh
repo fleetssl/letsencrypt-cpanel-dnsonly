@@ -5,6 +5,13 @@ if [ -f "/etc/cron.d/acmetool" ]; then
   rm -f /etc/cron.d/acmetool
 fi
 
-chmod 0644 /etc/cron.d/fleetssl-dnsonly
+if [ -f "/etc/cron.d/fleetssl-dnsonly" ]; then
+  echo "Removing legacy cronjob from previous version (superseded by systemd timer)"
+  rm -f /etc/cron.d/fleetssl-dnsonly
+fi
+
+/bin/bash -c '$(which systemctl) daemon-reload'
+/bin/bash -c '$(which systemctl) enable fleetssl-dnsonly.timer'
+/bin/bash -c '$(which systemctl) start fleetssl-dnsonly.timer'
 
 /usr/local/bin/fleetssl-dnsonly

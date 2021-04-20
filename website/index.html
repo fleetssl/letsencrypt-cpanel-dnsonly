@@ -61,24 +61,6 @@
 
     <div class="row marketing">
       <div class="col-sm-12">
-        <div style="background: lightyellow; padding: 1rem; border-radius: 1rem; margin-bottom: 1rem;">
-          <h4>Attention Existing Users: Upgrade to Version 1.0 before November 2019</h4>
-          <p>This project was rewritten from scratch in July 2019. It
-            previously relied on <a href="https://github.com/hlandau/acme" target="_blank"
-              rel="noopener noreferrer">acmetool</a>,
-            which is no longer maintained and <a
-              href="https://community.letsencrypt.org/t/end-of-life-plan-for-acmev1/88430" target="_blank"
-              rel="noopener noreferrer">will stop working from November 2019.</a> There's no need to panic, though.
-            As long as you upgrade to version >= 1.0.0, everything will keep on working as before (with some new
-            features).
-            To check your installed version or upgrade:</p>
-          <p>
-            <pre>rpm -q letsencrypt-cpanel-dnsonly
-yum clean all && yum -y install letsencrypt-cpanel-dnsonly</pre>
-          </p>
-        </div>
-      </div>
-      <div class="col-sm-12">
         <h4>Installation</h4>
         <p>Ensure you meet the prerequisites:</p>
         <ul>
@@ -86,7 +68,11 @@ yum clean all && yum -y install letsencrypt-cpanel-dnsonly</pre>
               href="https://documentation.cpanel.net/display/ALD/Installation+Guide+-+cPanel+DNSONLY+Installation"
               target="_blank">cPanel DNSONLY</a> installation, on at least an LTS supported version.</li>
           <li>A valid <a href="https://en.wikipedia.org/wiki/Fully_qualified_domain_name" target="_blank">FQDN</a>
-            hostname that resolves on the internet. The package will not install otherwise!</li>
+            hostname that resolves on the internet. Take care that you 
+            <a href="https://docs.cpanel.net/whm/networking-setup/change-hostname/" target="_blank">change your hostname</a>
+            first if cPanel assigned you an 
+            <a href="https://docs.cpanel.net/knowledge-base/dns/automatically-issued-hostnames/" target="_blank">
+            Automatically-Issued Hostname</a>.</li>
           <li>Ensure port <strong>80/tcp</strong> is open on any firewall - it's needed for SSL validation.</li>
         </ul>
 
@@ -108,8 +94,11 @@ yum clean all && yum -y install letsencrypt-cpanel-dnsonly</pre>
         <p class="">You typically should not need to do anything after installing the package. </p>
         <details open>
           <summary>How do I perform renewal?</summary>
-          <p>It is automatic. Upon installation, a cron task is added to
-            <code>/etc/cron.d/fleetssl-dnsonly</code>.
+          <p>It is automatic. Upon installation, a systemd timer is enabled, which runs twice daily.
+            You may check its status with:
+            <p>
+              <pre>systemctl status fleetssl-dnsonly.timer</pre>
+            </p>
             If you need to run renewal by hand for some reason, you can just run:
           </p>
           <pre>/usr/local/bin/fleetssl-dnsonly</pre>

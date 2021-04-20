@@ -1,0 +1,27 @@
+name: "letsencrypt-cpanel-dnsonly"
+arch: "amd64"
+platform: "linux"
+version: "${VER}"
+section: "default"
+priority: "extra"
+depends:
+- systemd
+maintainer: "FleetSSL <support@fleetssl.com>"
+description: |
+  Automatically install and renew SSL service certificates on
+  WHM/cPanel DNSONLY servers.
+vendor: "FleetSSL"
+homepage: "https://dnsonly.letsencrypt-for-cpanel.com/"
+license: "MIT"
+contents:
+- src: ./fleetssl-dnsonly
+  dst: /usr/local/bin/fleetssl-dnsonly
+- src: ./fleetssl-dnsonly.timer
+  dst: /etc/systemd/system/fleetssl-dnsonly.timer
+- src: ./fleetssl-dnsonly.service
+  dst: /etc/systemd/system/fleetssl-dnsonly.service
+overrides:
+  rpm:
+    scripts:
+      preinstall: ./pre-install.sh
+      postinstall: ./post-install.sh

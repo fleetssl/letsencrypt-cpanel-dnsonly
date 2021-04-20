@@ -1,0 +1,7 @@
+[Unit]
+Description=FleetSSL DNSONLY
+Documentation=https://dnsonly.letsencrypt-for-cpanel.com/
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/fleetssl-dnsonly
